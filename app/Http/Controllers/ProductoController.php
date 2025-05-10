@@ -106,32 +106,38 @@ class ProductoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'nombre' => 'required|string',
-            'descripcion' => 'required|string',
-            'precio' => 'required|numeric',
-            'stock' => 'required|integer',
-            'categoria_id' => 'required|exists:categorias,id',
-            'imagen_url' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+   public function update(Request $request, $id)
+{
+    $request->validate([
+        'nombre' => 'required|string',
+        'descripcion' => 'required|string',
+        'precio' => 'required|numeric',
+        'stock' => 'required|integer',
+        'categoria_id' => 'required|exists:categorias,id',
+        'imagen_url' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
 
-        $producto = Producto::findOrFail($id);
+    $producto = Producto::findOrFail($id);
 
-        if ($request->hasFile('imagen_url')) {
-            $archivo = $request->file('imagen_url');
-            $producto->imagen_url = $archivo->store('productos', 'public');
-        }
+    $producto->nombre = $request->nombre;
+    $producto->descripcion = $request->descripcion;
+    $producto->precio = $request->precio;
+    $producto->stock = $request->stock;
+    $producto->categoria_id = $request->categoria_id;
 
-        $producto->update($request->all());
-
-        if($producto->stock < 5) {
-            Mail::to('ar730674@gmail.com')->send(new AlertStock($producto));
-        }
-
-        return redirect()->route('productos.index')->with('success', 'Producto actualizado correctamente');
+    if ($request->hasFile('imagen_url')) {
+        $archivo = $request->file('imagen_url');
+        $producto->imagen_url = $archivo->store('productos', 'public');
     }
+
+    $producto->save();
+
+    if ($producto->stock < 5) {
+        Mail::to('juanjoseruizp04@gmail.com')->send(new AlertStock($producto));
+    }
+
+    return redirect()->route('productos.index')->with('success', 'Producto actualizado correctamente');
+}
 
 
     /**
